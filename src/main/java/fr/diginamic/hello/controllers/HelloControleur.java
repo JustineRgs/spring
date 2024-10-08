@@ -1,4 +1,4 @@
-package fr.diginamic.hello.controleurs;
+package fr.diginamic.hello.controllers;
 
 import fr.diginamic.hello.services.HelloService;
 
