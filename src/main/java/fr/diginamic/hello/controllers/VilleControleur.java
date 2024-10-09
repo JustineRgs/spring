@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -35,7 +36,7 @@ public class VilleControleur {
     }
 
     @PostMapping("/villes")
-    public ResponseEntity<String> ajouterVille(@RequestBody Ville nouvelleVille) {
+    public ResponseEntity<String> ajouterVille(@Valid @RequestBody Ville nouvelleVille) {
         String message = villeService.ajouterVille(nouvelleVille);
         if (message.equals("Ville insérée avec succès")) {
             return new ResponseEntity<>(message, HttpStatus.OK);
@@ -44,7 +45,7 @@ public class VilleControleur {
     }
 
     @PutMapping("/villes/{id}")
-    public ResponseEntity<String> updateVille(@PathVariable int id, @RequestBody Ville updatedVille) {
+    public ResponseEntity<String> updateVille(@PathVariable int id, @Valid @RequestBody Ville updatedVille) {
         String message = villeService.updateVille(id, updatedVille);
         if (message.equals("Ville mise à jour avec succès")) {
             return new ResponseEntity<>(message, HttpStatus.OK);
