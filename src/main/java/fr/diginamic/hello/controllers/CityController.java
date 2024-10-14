@@ -174,9 +174,10 @@ public class CityController {
         return this.cityService.findDepartementBiggestCities(pageable, codeDept);
     }
 
+    //    http://localhost:8080/city/export-cities-csv
     //    http://localhost:8080/city/export-cities-csv?minPopulation=10000
     @Operation(summary = "Export cities to CSV",
-            description = "Exports a list of cities with a population greater than the specified minimum, including department information.")
+            description = "Exports a list of cities with a population greater than the specified minimum, or all cities if no minimum is specified.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful export of cities to CSV"),
             @ApiResponse(responseCode = "400", description = "Invalid population parameter"),
@@ -184,9 +185,14 @@ public class CityController {
     })
     @GetMapping("/export-cities-csv")
     public ResponseEntity<InputStreamResource> exportCitiesToCSV(
-            @RequestParam long minPopulation) throws Exception {
+            @RequestParam(required = false) Long minPopulation) throws Exception {
 
-        List<City> cities = cityService.findByNbInhabitantsAfter(minPopulation);
+        List<City> cities;
+        if (minPopulation != null) {
+            cities = cityService.findByNbInhabitantsAfter(minPopulation);
+        } else {
+            cities = cityService.findAll();
+        }
 
         StringWriter writer = new StringWriter();
         CSVWriter csvWriter = new CSVWriter(writer);
@@ -213,7 +219,7 @@ public class CityController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=cities.csv")
-                .contentType(MediaType.parseMediaType("application/csv"))
+                .contentType(MediaType.parseMediaType("text/csv"))
                 .body(resource);
     }
 

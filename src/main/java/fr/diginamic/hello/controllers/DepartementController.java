@@ -4,6 +4,7 @@ import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.pdf.PdfWriter;
+import com.opencsv.CSVWriter;
 import fr.diginamic.hello.model.City;
 import fr.diginamic.hello.model.Departement;
 import fr.diginamic.hello.services.DepartementService;
@@ -26,6 +27,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.List;
 
 @RestController
@@ -58,7 +60,7 @@ public class DepartementController {
         return ResponseEntity.ok(cities);
     }
 
-//    http://localhost:8080/departement/34/export-pdf
+    //    http://localhost:8080/departement/61/export-pdf
     @GetMapping("/{code}/export-pdf")
     @Operation(
             summary = "Export Department Details to PDF",
@@ -102,6 +104,42 @@ public class DepartementController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=department_" + code + ".pdf")
                 .contentType(MediaType.APPLICATION_PDF)
+                .body(resource);
+    }
+
+    //   http://localhost:8080/departement/export-departments-csv
+    @Operation(summary = "Export departments to CSV",
+            description = "Exports a list of all departments including their codes and names.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful export of departments to CSV"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/export-departments-csv")
+    public ResponseEntity<InputStreamResource> exportDepartmentsToCSV() throws Exception {
+
+        List<Departement> departements = departementService.getAll();
+
+        StringWriter writer = new StringWriter();
+        CSVWriter csvWriter = new CSVWriter(writer);
+
+        String[] header = {"Department Code", "Department Name"};
+        csvWriter.writeNext(header);
+
+        for (Departement departement : departements) {
+            String[] deptData = {
+                    departement.getCode(),
+                    departement.getName()
+            };
+            csvWriter.writeNext(deptData);
+        }
+
+        csvWriter.close();
+
+        InputStreamResource resource = new InputStreamResource(new ByteArrayInputStream(writer.toString().getBytes()));
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=departments.csv")
+                .contentType(MediaType.parseMediaType("text/csv"))
                 .body(resource);
     }
 }

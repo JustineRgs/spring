@@ -25,6 +25,10 @@ public class CityService {
     @Autowired
     private DepartementService departementService;
 
+    public List<City> findAll() {
+        return cityRepository.findAll();
+    }
+
     public Page<CityDto> findAllPageable(Pageable pageable) {
         Page<City> cityPage = this.cityRepository.findAll(pageable);
         return cityPage.map(cityMapper::toDto);
