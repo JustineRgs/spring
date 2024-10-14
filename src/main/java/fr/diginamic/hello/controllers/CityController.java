@@ -7,6 +7,7 @@ import fr.diginamic.hello.model.City;
 import fr.diginamic.hello.DTO.CityDto;
 import fr.diginamic.hello.services.CityService;
 import jakarta.validation.Valid;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -14,12 +15,25 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpHeaders;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
+
+import com.opencsv.CSVWriter;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import java.io.ByteArrayInputStream;
+import java.io.StringWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.Scanner;
+
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -130,7 +144,7 @@ public class CityController {
             @RequestParam String codeDept,
             @RequestParam long min
     ) throws FunctionalException {
-        List<City> cities = this.cityService.findByDepartement_IdAndNbInhabitantsAfter(codeDept, min);
+        List<City> cities = this.cityService.findCitiesByDepartmentIdAndMinInhabitants(codeDept, min);
         return cities.stream()
                 .map(cityMapper::toDto)
                 .collect(Collectors.toList());
@@ -158,5 +172,65 @@ public class CityController {
     ) {
         Pageable pageable = PageRequest.of(page, size);
         return this.cityService.findDepartementBiggestCities(pageable, codeDept);
+    }
+
+    //    http://localhost:8080/city/export-cities-csv?minPopulation=10000
+    @Operation(summary = "Export cities to CSV",
+            description = "Exports a list of cities with a population greater than the specified minimum, including department information.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful export of cities to CSV"),
+            @ApiResponse(responseCode = "400", description = "Invalid population parameter"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/export-cities-csv")
+    public ResponseEntity<InputStreamResource> exportCitiesToCSV(
+            @RequestParam long minPopulation) throws Exception {
+
+        List<City> cities = cityService.findByNbInhabitantsAfter(minPopulation);
+
+        StringWriter writer = new StringWriter();
+        CSVWriter csvWriter = new CSVWriter(writer);
+
+        String[] header = {"City Name", "Population", "Department Code", "Department Name"};
+        csvWriter.writeNext(header);
+
+        for (City city : cities) {
+            String deptCode = city.getDepartement().getCode();
+            String deptName = getDepartmentName(deptCode);
+
+            String[] cityData = {
+                    city.getName(),
+                    String.valueOf(city.getNbInhabitants()),
+                    deptCode,
+                    deptName
+            };
+            csvWriter.writeNext(cityData);
+        }
+
+        csvWriter.close();
+
+        InputStreamResource resource = new InputStreamResource(new ByteArrayInputStream(writer.toString().getBytes()));
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=cities.csv")
+                .contentType(MediaType.parseMediaType("application/csv"))
+                .body(resource);
+    }
+
+    private String getDepartmentName(String deptCode) throws Exception {
+        String urlStr = "https://geo.api.gouv.fr/departements/" + deptCode + "?fields=nom,code,codeRegion";
+        URL url = new URL(urlStr);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+
+        Scanner scanner = new Scanner(connection.getInputStream());
+        StringBuilder response = new StringBuilder();
+        while (scanner.hasNext()) {
+            response.append(scanner.nextLine());
+        }
+        scanner.close();
+
+        JSONObject jsonObject = new JSONObject(response.toString());
+        return jsonObject.getString("nom");
     }
 }

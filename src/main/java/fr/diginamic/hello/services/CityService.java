@@ -1,10 +1,10 @@
 package fr.diginamic.hello.services;
 
+import fr.diginamic.hello.DTO.CityDto;
 import fr.diginamic.hello.exceptions.CityNotFoundException;
 import fr.diginamic.hello.exceptions.FunctionalException;
 import fr.diginamic.hello.mapper.CityMapper;
 import fr.diginamic.hello.model.City;
-import fr.diginamic.hello.DTO.CityDto;
 import fr.diginamic.hello.model.Departement;
 import fr.diginamic.hello.repository.CityRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +19,9 @@ import java.util.List;
 public class CityService {
 
     @Autowired
-    private CityRepository cityRepository;
-
-    @Autowired
     CityMapper cityMapper;
+    @Autowired
+    private CityRepository cityRepository;
     @Autowired
     private DepartementService departementService;
 
@@ -51,7 +50,7 @@ public class CityService {
 
     public City create(City city) throws FunctionalException {
         Departement departement = departementService.findByCode(city.getDepartement().getCode());
-        if (departement != null){
+        if (departement != null) {
             city.setDepartement(departement);
         }
         this.validateCity(city);
@@ -97,7 +96,7 @@ public class CityService {
         return cities;
     }
 
-    public List<City> findByDepartement_IdAndNbInhabitantsAfter(String codeDept, long min) throws FunctionalException {
+    public List<City> findCitiesByDepartmentIdAndMinInhabitants(String codeDept, long min) throws FunctionalException {
         List<City> cities = this.cityRepository.findByDepartement_CodeAndNbInhabitantsAfter(codeDept, min);
         if (cities.isEmpty()) {
             throw new FunctionalException("No town has a population of over " + min + " in the " + codeDept + " département");
@@ -118,6 +117,4 @@ public class CityService {
         return cityPage.map(cityMapper::toDto);
 
     }
-
-
 }
