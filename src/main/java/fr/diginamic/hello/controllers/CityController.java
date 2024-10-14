@@ -1,7 +1,10 @@
 package fr.diginamic.hello.controllers;
 
 import fr.diginamic.hello.exceptions.CityNotFoundException;
+import fr.diginamic.hello.exceptions.FunctionalException;
+import fr.diginamic.hello.mapper.CityMapper;
 import fr.diginamic.hello.model.City;
+import fr.diginamic.hello.DTO.CityDto;
 import fr.diginamic.hello.services.CityService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/city")
@@ -21,37 +25,40 @@ public class CityController {
     @Autowired
     private CityService cityService;
 
+    @Autowired
+    CityMapper cityMapper;
+
     @GetMapping
-    public Page<City> getCities(@RequestParam(defaultValue = "0") int page,
-                                @RequestParam(defaultValue = "10") int size){
+    public Page<CityDto> getCities(@RequestParam(defaultValue = "0") int page,
+                                   @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
         return this.cityService.findAllPageable(pageable);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<City> getCity(@PathVariable int id) {
+    public ResponseEntity<CityDto> getCity(@PathVariable int id) {
         try {
             City city = cityService.findById(id);
-            return new ResponseEntity<>(city, HttpStatus.OK);
+            return new ResponseEntity<>(this.cityMapper.toDto(city), HttpStatus.OK);
         } catch (CityNotFoundException ex) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
     @GetMapping("/findByName")
-    public ResponseEntity<?> findByName(@RequestParam String name) {
-        City existingCity = this.cityService.findByName(name);
-        return new ResponseEntity<City>(existingCity, HttpStatus.OK);
+    public ResponseEntity<CityDto> findByName(@RequestParam String name) {
+        City city = this.cityService.findByName(name);
+        return new ResponseEntity<>(this.cityMapper.toDto(city), HttpStatus.OK);
     }
 
     @PostMapping
-    public City create(@Valid @RequestBody City city) {
+    public City create(@Valid @RequestBody City city) throws FunctionalException {
         return this.cityService.create(city);
     }
 
     @PutMapping
     public City update(
-            @Valid @RequestBody City city) {
+            @Valid @RequestBody City city) throws FunctionalException {
         return this.cityService.update(city);
     }
 
@@ -65,47 +72,68 @@ public class CityController {
     }
 
     @GetMapping("/findby-name-starting-with")
-    public List<City> findByNameStartingWith(@RequestParam String prefix) {
-        return this.cityService.findByNameStartingWith(prefix);
+    public List<CityDto> findByNameStartingWith(@RequestParam String prefix) throws FunctionalException {
+        List<City> cities = this.cityService.findByNameStartingWith(prefix);
+
+        return cities.stream()
+                .map(cityMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/findby-nb-inhabitants-after")
-    public List<City> findByNbInhabitantsAfter(@RequestParam long min) {
-        return this.cityService.findByNbInhabitantsAfter(min);
+    public List<CityDto> findByNbInhabitantsAfter(@RequestParam long min) throws FunctionalException {
+        List<City> cities = this.cityService.findByNbInhabitantsAfter(min);
+        return cities.stream()
+                .map(cityMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/findby-nb-inhabitants-between")
-    public List<City> findByNbInhabitantsBetween(
+    public List<CityDto> findByNbInhabitantsBetween(
             @RequestParam long min,
             @RequestParam long max
-    ) {
-        return this.cityService.findByNbInhabitantsBetween(min, max);
+    ) throws FunctionalException {
+
+        List<City> cities = this.cityService.findByNbInhabitantsBetween(min, max);
+        return cities.stream()
+                .map(cityMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/findby-departement_id-and-nb-inhabitants-after")
-    public List<City> findByDepartement_IdAndNbInhabitantsAfter(
-            @RequestParam long idDept,
+    public List<CityDto> findByDepartement_IdAndNbInhabitantsAfter(
+            @RequestParam String codeDept,
             @RequestParam long min
-    ) {
-        return this.cityService.findByDepartement_IdAndNbInhabitantsAfter(idDept, min);
+    ) throws FunctionalException {
+
+        List<City> cities = this.cityService.findByDepartement_IdAndNbInhabitantsAfter(codeDept, min);
+        return cities.stream()
+                .map(cityMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    @GetMapping("/findby-departement_id-and-nb-inhabitants-between")
-    public List<City> findByDepartement_IdAndNbInhabitantsBetween(
-            @RequestParam long idDept,
+    @GetMapping("/findby-departement-and-nbinhabitants-between")
+    public List<CityDto> findByDepartement_IdAndNbInhabitantsBetween(
+            @RequestParam String codeDept,
             @RequestParam long min,
             @RequestParam long max
-    ) {
-        return this.cityService.findByDepartement_IdAndNbInhabitantsBetween(idDept, min, max);
+    ) throws FunctionalException {
+
+        List<City> cities = this.cityService.findByDepartementAndNbInhabitantsBetween(codeDept, min, max);
+        return cities.stream()
+                .map(cityMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    @GetMapping("/findby-departement_id-orderby-nbinhabitants-desc")
-    public Page<City> findByDepartement_IdOrderByNbInhabitantsDesc(
+    @GetMapping("/find-departement-biggest-cities")
+    public Page<CityDto> findDepartementBiggestCities(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam long idDept
+            @RequestParam String codeDept
     ) {
         Pageable pageable = PageRequest.of(page, size);
-        return this.cityService.findByDepartement_IdOrderByNbInhabitantsDesc(pageable, idDept);
+        return this.cityService.findDepartementBiggestCities(pageable, codeDept);
     }
+
+
 }

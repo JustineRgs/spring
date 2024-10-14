@@ -2,64 +2,65 @@ package fr.diginamic.hello.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+/**
+ * Entity class representing a City.
+ */
+@Getter
+@Setter
+@NoArgsConstructor
 @Entity
 public class City {
 
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
+    @NotNull(message = "City name cannot be null")
     private String name;
 
+    @NotNull(message = "Number of inhabitants cannot be null")
     private long nbInhabitants;
 
     @JsonIgnore
     private Double idRegion;
 
     @ManyToOne
+    @JoinColumn(name = "departement_id", nullable = false)
     private Departement departement;
 
-    public City() {
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
+    public City(String name, long nbInhabitants, Double idRegion, Departement departement) {
         this.name = name;
-    }
-
-    public long getNbInhabitants() {
-        return nbInhabitants;
-    }
-
-    public void setNbInhabitants(long nbInhabitants) {
         this.nbInhabitants = nbInhabitants;
-    }
-
-    public Departement getDepartement() {
-        return departement;
-    }
-
-    public void setDepartement(Departement departement) {
+        this.idRegion = idRegion;
         this.departement = departement;
     }
 
-    public double getIdRegion() {
-        return idRegion;
+    @Override
+    public String toString() {
+        return "City{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", nbInhabitants=" + nbInhabitants +
+                ", idRegion=" + idRegion +
+                ", departement=" + departement.getCode() +
+                '}';
     }
 
-    public void setIdRegion(double ID_REGION) {
-        this.idRegion = ID_REGION;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof City)) return false;
+        City city = (City) o;
+        return id == city.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Long.hashCode(id);
     }
 }

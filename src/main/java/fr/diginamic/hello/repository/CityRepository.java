@@ -15,9 +15,9 @@ public interface CityRepository extends JpaRepository<City, Long> {
     List<City> findByNameStartingWith(String prefix);
     List<City> findByNbInhabitantsAfter(long min);
     List<City> findByNbInhabitantsBetween(long min, long max);
-    List<City> findByDepartement_IdAndNbInhabitantsAfter(long dept, long min);
-    List<City> findByDepartement_IdAndNbInhabitantsBetween(long dept, long min, long max);
-    Page<City> findByDepartement_IdOrderByNbInhabitantsDesc(Pageable pageable, long dept);
+    List<City> findByDepartement_CodeAndNbInhabitantsAfter(String dept, long min);
+    List<City> findByDepartement_CodeAndNbInhabitantsBetween(String dept, long min, long max);
+    Page<City> findByDepartement_CodeOrderByNbInhabitantsDesc(Pageable pageable, String dept);
 
 
 }
