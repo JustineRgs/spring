@@ -40,7 +40,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/city")
+@RequestMapping("/api/city")
 public class CityController {
 
     @Autowired
@@ -100,7 +100,7 @@ public class CityController {
     }
 
     @Operation(summary = "Delete a city by ID", description = "Delete an existing city by its ID")
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> delete(@PathVariable int id) {
         City existingCity = this.cityService.findById(id);
         if (existingCity == null) {

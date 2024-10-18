@@ -2,20 +2,43 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>City</title>
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-<table>
-    <tr>
-        <th>Name</th>
-        <th>Departement</th>
-        <th>Population</th>
-    </tr>
-    <tr th:each="city : ${cities}">
-        <td th:text="${city.name}">Name</td>
-        <td th:text="${city.departement.code + ' - ' + city.departement.name}">Name</td>
-        <td th:text="${city.nbInhabitants}">00</td>
-    </tr>
-</table>
+    <h1>Cities</h1>
+    <a class="btn-logout" th:href="@{/logout}">
+        Logout
+    </a>
+    <a class="btn-home" th:href="@{/}">
+        Home
+    </a>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Departement</th>
+                <th>Population</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="city : ${cities}">
+                <td th:text="${city.name}">Name</td>
+                <td th:text="${city.departement.code + ' - ' + city.departement.name}">Name</td>
+                <td th:text="${city.nbInhabitants}">00</td>
+                <td>
+                    <a href="city-info.html" th:href="@{/city/{id}(id=${city.id})}" class ="btn-view">
+                        View
+                    </a>
+                    <a  href="city-info.html" th:href="@{/city/delete/{id}(id=${city.id})}" class ="btn-delete">
+                        Delete
+                    </a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
 </body>
 </html>

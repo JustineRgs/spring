@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${title}">Title</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <h1 th:text="${title}">Home</h1>
+    <a th:href="@{/city}" class="btn-view">
+        Return cities page
+    </a>
+</body>
+</html>
